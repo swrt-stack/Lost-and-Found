@@ -1,0 +1,52 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Backend
+backend/target/
+backend/*.log
+backend/*-out.log
+backend/cache-*.log
+backend/smoke-*.log
+backend/boot*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Python
+**/.venv/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# AI models & generated index (download or rebuild locally)
+python-image-search/models/
+python-image-search/data/index/*.faiss
+python-image-search/data/index/image_metadata.json
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# User uploads (keep demo images)
+backend/uploads/*
+!backend/uploads/demo/
+!backend/uploads/demo/**
+
+# Temp files
+tmp-chrome-items/
+tmp-*/
+*.tmp
+*.swp
+*.log
+redis-*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

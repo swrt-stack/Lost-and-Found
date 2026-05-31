@@ -1,0 +1,64 @@
+app:
+  security:
+    login-protection:
+      max-failures: 5
+      failure-window-seconds: 300
+      lock-seconds: 900
+  rate-limit:
+    rules:
+      "[auth:login]":
+        rate: 5
+        interval: 1
+        time-unit: MINUTES
+      "[auth:register]":
+        rate: 3
+        interval: 10
+        time-unit: MINUTES
+      "[upload:image]":
+        rate: 10
+        interval: 1
+        time-unit: MINUTES
+      "[chat:send-message]":
+        rate: 20
+        interval: 1
+        time-unit: MINUTES
+      "[item:create-lost]":
+        rate: 5
+        interval: 10
+        time-unit: MINUTES
+      "[item:create-found]":
+        rate: 5
+        interval: 10
+        time-unit: MINUTES
+      "[item:report]":
+        rate: 10
+        interval: 10
+        time-unit: MINUTES
+      "[item:claim]":
+        rate: 10
+        interval: 10
+        time-unit: MINUTES
+      "[ai:image-rebuild]":
+        rate: 1
+        interval: 1
+        time-unit: MINUTES
+      "[ai:image-by-path]":
+        rate: 10
+        interval: 1
+        time-unit: MINUTES
+      "[ai:image-by-upload]":
+        rate: 5
+        interval: 1
+        time-unit: MINUTES
+      "[ai:image-by-text]":
+        rate: 10
+        interval: 1
+        time-unit: MINUTES
+      "[ai:smart-match]":
+        rate: 5
+        interval: 1
+        time-unit: MINUTES
+      "[ai:spatiotemporal-predict]":
+        rate: 10
+        interval: 1
+        time-unit: MINUTES

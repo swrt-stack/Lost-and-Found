@@ -1,0 +1,90 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+logging:
+  pattern:
+    level: "%5p [req:%X{requestId:-none}]"
+
+spring:
+  application:
+    name: lost-and-found-backend
+  profiles:
+    default: dev
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/lost_found?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_0900_ai_ci&sessionVariables=character_set_client=utf8mb4,character_set_connection=utf8mb4,character_set_results=utf8mb4}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:uzi159357+}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-init-sql: SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3s
+
+mybatis-flex:
+  mapper-locations:
+    - classpath*:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-components: always
+      show-details: when_authorized
+    prometheus:
+      access: unrestricted
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  upload-dir: ./uploads
+  security:
+    jwt-secret: ${JWT_SECRET:lost-found-platform-jwt-secret-key-2026-demo-2026}
+    captcha:
+      enabled: ${CAPTCHA_ENABLED:true}
+      length: ${CAPTCHA_LENGTH:4}
+      ttl-seconds: ${CAPTCHA_TTL_SECONDS:180}
+      width: ${CAPTCHA_WIDTH:132}
+      height: ${CAPTCHA_HEIGHT:44}
+    login-protection:
+      enabled: ${LOGIN_PROTECTION_ENABLED:true}
+      max-failures: ${LOGIN_PROTECTION_MAX_FAILURES:5}
+      failure-window-seconds: ${LOGIN_PROTECTION_FAILURE_WINDOW_SECONDS:300}
+      lock-seconds: ${LOGIN_PROTECTION_LOCK_SECONDS:600}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    key-prefix: lost-found:rate-limit
+    fail-open: true
+    ip-header-names:
+      - X-Forwarded-For
+      - X-Real-IP
+  ai:
+    connect-timeout-ms: 3000
+    read-timeout-ms: 120000
+    image-search:
+      base-url: http://127.0.0.1:8090
+    spatiotemporal:
+      base-url: http://127.0.0.1:8091
