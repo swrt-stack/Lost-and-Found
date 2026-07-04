@@ -132,9 +132,9 @@ CREATE TABLE system_config (
 
 INSERT INTO sys_user (username, password, nickname, phone, role, status)
 VALUES
-('demo', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', 'Demo User', '13800000000', 'USER', 1),
-('reviewer', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', 'Review Admin', '13900000000', 'REVIEW_ADMIN', 1),
-('sysadmin', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', 'System Admin', '13700000000', 'SYS_ADMIN', 1);
+('demo', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', '演示用户', '13800000000', 'USER', 1),
+('reviewer', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', '审核管理员', '13900000000', 'REVIEW_ADMIN', 1),
+('sysadmin', '$2a$10$7QJk0oD0lJYj7V6TQ2xE2uxV2m1dQxW8m2F6yKQv1cQm4f2mG4L8K', '系统管理员', '13700000000', 'SYS_ADMIN', 1);
 
 INSERT INTO item_category (name)
 VALUES
@@ -172,34 +172,34 @@ VALUES
 
 INSERT INTO message_notice (user_id, message_type, content, read_flag)
 VALUES
-(1, 'REVIEW', 'Your lost item "Bluetooth Earbuds" has been approved.', 0),
-(1, 'MATCH', 'The system found a possible matching found-item record for you.', 1);
+(1, 'REVIEW', '你的遗失物品【黑色无线蓝牙耳机】审核已通过', 0),
+(1, 'MATCH', '系统为你匹配到一条可能相关的招领线索，可点击查看详情', 1);
 
 INSERT INTO item_chat_message (item_id, sender_user_id, receiver_user_id, content, read_flag)
 VALUES
-('FOUND-1', 2, 1, 'Hello, please confirm whether the found student card belongs to you.', 1),
-('FOUND-1', 1, 2, 'Thank you. I can provide the student number and college information for verification.', 0);
+('FOUND-1', 2, 1, '你好，请确认拾到的学生证是否属于你。', 1),
+('FOUND-1', 1, 2, '谢谢，我可以提供学号和学院信息进行核实。', 0);
 
 INSERT INTO operation_log (user_id, action, detail, ip_address)
 VALUES
-(1, 'LOGIN', 'Demo user signed in.', '127.0.0.1'),
-(2, 'APPROVE_REVIEW', 'Review admin approved a lost-item post.', '127.0.0.1'),
-(3, 'UPDATE_CONFIG', 'System admin updated system configuration.', '127.0.0.1');
+(1, 'LOGIN', '演示用户登录', '127.0.0.1'),
+(2, 'APPROVE_REVIEW', '审核管理员通过一条失物发布审核', '127.0.0.1'),
+(3, 'UPDATE_CONFIG', '系统管理员更新系统配置', '127.0.0.1');
 
 INSERT INTO claim_application (found_item_id, applicant_user_id, owner_user_id, message, status, review_remark)
 VALUES
-(1, 1, 1, 'I can describe the student ID details and owner information.', 2, 'Please provide more accurate identity details.');
+(1, 1, 1, '我可以描述学生证上的学号、姓名等细节信息。', 2, '请补充更准确的身份核验信息。');
 
 INSERT INTO announcement (title, content, status)
 VALUES
-('Lost and Found Desk Hours', 'The campus lost and found desk is open from 09:00 to 18:00 on weekdays.', 1),
-('Claim Reminder', 'Bring a valid ID or enough item details when you submit a claim request.', 1),
-('System Upgrade', 'Review and notification modules were upgraded this week.', 1);
+('失物招领处开放时间', '校园失物招领处工作日开放时间为 09:00—18:00，请在此时间段内办理相关业务。', 1),
+('认领须知', '提交认领申请时请携带有效证件，或提供足以核实身份的物品细节信息。', 1),
+('系统升级通知', '本周已完成审核与消息通知模块升级，相关功能已同步上线。', 1);
 
 INSERT INTO item_report (item_id, item_type, reporter_user_id, reason, status, review_remark)
 VALUES
-('FOUND-1', 'FOUND', 1, 'The post content looks suspicious and may not match the real owner.', 2, 'Checked by admin, no further issue found.');
+('FOUND-1', 'FOUND', 1, '该发布内容存疑，可能与实际失主信息不符。', 2, '管理员已核查，未发现进一步问题。');
 
 INSERT INTO system_config (id, site_name, review_enabled, max_image_size, notice_enabled)
 VALUES
-(1, 'Campus Lost and Found', 1, 5, 1);
+(1, '校园失物招领平台', 1, 5, 1);

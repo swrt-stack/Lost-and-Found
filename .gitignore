@@ -38,6 +38,10 @@ backend/uploads/*
 !backend/uploads/demo/
 !backend/uploads/demo/**
 
+# Redis dumps
+*.rdb
+dump.rdb
+
 # Temp files
 tmp-chrome-items/
 tmp-*/

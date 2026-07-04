@@ -74,13 +74,21 @@ http://127.0.0.1:8091
 }
 ```
 
-## Example training checkpoint
+## Train on real lost-item records
 
-You can generate a simple demo checkpoint with:
+Train on approved `lost_item` rows (`status = 1`) from MySQL. Encoding matches the Java backend.
 
 ```powershell
 cd D:\GraduationDesign\untitled\python-spatiotemporal
-.\.venv\Scripts\python scripts\train_example.py
+.\scripts\train_real.ps1
 ```
 
-This is only a demo training script. Real use should replace it with actual lost-and-found spatiotemporal sequence data.
+Optional environment variables:
+
+- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`
+
+After training, restart the service on port `8091` so the new checkpoint is loaded.
+
+## Legacy demo checkpoint
+
+`scripts/train_example.py` trains one step on random data and is kept only for smoke testing.

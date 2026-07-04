@@ -52,6 +52,13 @@ public class ItemController {
         return ApiResponse.ok(itemService.search(keyword, location, type, categoryId));
     }
 
+    @GetMapping("/keyword-search")
+    public ApiResponse<Object> keywordSearch(@RequestParam(required = false) String keyword,
+                                             @RequestParam(required = false) String type,
+                                             @RequestParam(required = false) Long categoryId) {
+        return ApiResponse.ok(itemService.keywordSearch(keyword, type, categoryId));
+    }
+
     @GetMapping("/mine")
     public ApiResponse<Object> mine() {
         return ApiResponse.ok(itemService.myItems());

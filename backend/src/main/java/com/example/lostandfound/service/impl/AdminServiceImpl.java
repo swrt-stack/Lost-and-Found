@@ -25,8 +25,11 @@ import com.example.lostandfound.mapper.MessageNoticeMapper;
 import com.example.lostandfound.mapper.OperationLogMapper;
 import com.example.lostandfound.mapper.UserMapper;
 import com.example.lostandfound.service.AdminService;
+import com.example.lostandfound.service.AiService;
 import com.example.lostandfound.service.support.AuditLogSupport;
 import com.example.lostandfound.service.support.MatchNoticeSupport;
+import com.example.lostandfound.service.support.SpatiotemporalSupport;
+import com.example.lostandfound.dto.AiDTO;
 import com.mybatisflex.core.query.QueryWrapper;
 import org.springframework.stereotype.Service;
 
@@ -60,13 +63,14 @@ public class AdminServiceImpl implements AdminService {
     private final MatchNoticeSupport matchNoticeSupport;
     private final RedisJsonCacheService cacheService;
     private final UnreadCounterService unreadCounterService;
+    private final AiService aiService;
 
     public AdminServiceImpl(AnnouncementMapper announcementMapper, ClaimApplicationMapper claimApplicationMapper,
                             LostItemMapper lostItemMapper, FoundItemMapper foundItemMapper,
                             ItemCategoryMapper itemCategoryMapper, ItemReportMapper itemReportMapper, UserMapper userMapper,
                             MessageNoticeMapper messageNoticeMapper, OperationLogMapper operationLogMapper, AuditLogSupport auditLogSupport,
                             MatchNoticeSupport matchNoticeSupport, RedisJsonCacheService cacheService,
-                            UnreadCounterService unreadCounterService) {
+                            UnreadCounterService unreadCounterService, AiService aiService) {
         this.announcementMapper = announcementMapper;
         this.claimApplicationMapper = claimApplicationMapper;
         this.lostItemMapper = lostItemMapper;
@@ -80,6 +84,88 @@ public class AdminServiceImpl implements AdminService {
         this.matchNoticeSupport = matchNoticeSupport;
         this.cacheService = cacheService;
         this.unreadCounterService = unreadCounterService;
+        this.aiService = aiService;
+    }
+
+    @Override
+    public AdminDTO.SpatiotemporalAnalysisVO getSpatiotemporalAnalysis(Integer topK) {
+        int normalizedTopK = topK == null ? 5 : Math.min(20, Math.max(1, topK));
+        List<LostItem> approvedLostItems = lostItemMapper.selectListByQuery(
+                QueryWrapper.create().where("status = ?", 1).orderBy("lost_time asc")
+        );
+        Map<String, Integer> locationHeatmap = SpatiotemporalSupport.buildLocationHeatmap(approvedLostItems);
+        Map<Integer, String> locationLabels = SpatiotemporalSupport.buildLocationLabelIndex(approvedLostItems);
+        List<AiDTO.TrajectoryEvent> history = SpatiotemporalSupport.buildHistory(approvedLostItems, locationLabels);
+
+        if (history.isEmpty()) {
+            return new AdminDTO.SpatiotemporalAnalysisVO(
+                    false,
+                    "暂无带时间的已审核遗失记录，无法构建时空预测序列",
+                    false,
+                    0,
+                    approvedLostItems.size(),
+                    locationHeatmap,
+                    List.of(),
+                    List.of()
+            );
+        }
+
+        try {
+            AiDTO.SpatiotemporalStatusVO status = aiService.spatiotemporalStatus();
+            if (status == null || Boolean.FALSE.equals(status.checkpointLoaded())) {
+                return new AdminDTO.SpatiotemporalAnalysisVO(
+                        false,
+                        "时空预测服务未就绪，请先启动 python-spatiotemporal 并加载模型",
+                        false,
+                        history.size(),
+                        approvedLostItems.size(),
+                        locationHeatmap,
+                        List.of(),
+                        List.of()
+                );
+            }
+
+            AiDTO.SpatiotemporalPredictRequest request = new AiDTO.SpatiotemporalPredictRequest();
+            request.setHistory(history);
+            request.setTopK(normalizedTopK);
+            AiDTO.SpatiotemporalPredictionVO prediction = aiService.predictSpatiotemporal(request);
+
+            List<AdminDTO.SpatiotemporalPredictionItemVO> nextLocations = SpatiotemporalSupport.resolveLocationPredictions(
+                    prediction.nextLocationTopk(),
+                    locationLabels,
+                    locationHeatmap,
+                    normalizedTopK
+            );
+            List<AdminDTO.SpatiotemporalPredictionItemVO> nextTimeBuckets = prediction.nextTimeBucketTopk().stream()
+                    .map(item -> new AdminDTO.SpatiotemporalPredictionItemVO(
+                            item.id(),
+                            item.score(),
+                            SpatiotemporalSupport.timeBucketLabel(item.id())
+                    ))
+                    .toList();
+
+            return new AdminDTO.SpatiotemporalAnalysisVO(
+                    true,
+                    "预测完成",
+                    Boolean.TRUE.equals(prediction.modelReady()),
+                    prediction.historyLength(),
+                    approvedLostItems.size(),
+                    locationHeatmap,
+                    nextLocations,
+                    nextTimeBuckets
+            );
+        } catch (BusinessException exception) {
+            return new AdminDTO.SpatiotemporalAnalysisVO(
+                    false,
+                    exception.getMessage(),
+                    false,
+                    history.size(),
+                    approvedLostItems.size(),
+                    locationHeatmap,
+                    List.of(),
+                    List.of()
+            );
+        }
     }
 
     @Override

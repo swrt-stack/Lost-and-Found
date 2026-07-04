@@ -29,6 +29,12 @@ public class AdminController {
         return ApiResponse.ok(adminService.getDashboard());
     }
 
+    @GetMapping("/spatiotemporal/analysis")
+    public ApiResponse<Object> spatiotemporalAnalysis(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Integer topK) {
+        return ApiResponse.ok(adminService.getSpatiotemporalAnalysis(topK));
+    }
+
     @GetMapping("/reviews")
     public ApiResponse<Object> reviews() {
         return ApiResponse.ok(adminService.reviewList());

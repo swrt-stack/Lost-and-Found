@@ -4,6 +4,10 @@ export function searchItems(params) {
   return client.get('/items/search', { params })
 }
 
+export function keywordSearchItems(params) {
+  return client.get('/items/keyword-search', { params })
+}
+
 export function publishLost(data) {
   return client.post('/items/lost', data)
 }

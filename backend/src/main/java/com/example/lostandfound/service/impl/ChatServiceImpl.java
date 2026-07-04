@@ -241,7 +241,7 @@ public class ChatServiceImpl implements ChatService {
         ItemContext context = requireItemContext(itemId);
         Long resolvedCounterpartUserId = resolveCounterpartUserId(currentUser, context, counterpartUserId);
         if (currentUser.getId().equals(resolvedCounterpartUserId)) {
-            throw new BusinessException(400, "?????????");
+            throw new BusinessException(400, "不能给自己发送消息");
         }
 
         User counterpart = requireUser(resolvedCounterpartUserId);
@@ -258,11 +258,11 @@ public class ChatServiceImpl implements ChatService {
         createNotice(
                 counterpart.getId(),
                 "CHAT",
-                displayName(currentUser) + " ????" + context.itemTitle() + "???????????",
+                displayName(currentUser) + " 就「" + context.itemTitle() + "」给你发来一条新消息",
                 "/messages?itemId=" + itemId + "&counterpartUserId=" + currentUser.getId()
         );
         auditLogSupport.record(currentUser.getId(), "SEND_CHAT_MESSAGE", "Sent chat message for " + itemId);
-        return new ChatDTO.ChatActionVO(itemId, counterpart.getId(), "?????");
+        return new ChatDTO.ChatActionVO(itemId, counterpart.getId(), "消息已发送");
     }
 
     private Long resolveCounterpartUserId(User currentUser, ItemContext context, Long counterpartUserId) {
@@ -271,10 +271,10 @@ public class ChatServiceImpl implements ChatService {
             return context.ownerUserId();
         }
         if (counterpartUserId == null) {
-            throw new BusinessException(400, "???????");
+            throw new BusinessException(400, "请指定沟通对象");
         }
         if (!hasExistingConversation(context.itemId(), currentUser.getId(), counterpartUserId)) {
-            throw new BusinessException(403, "???????????????");
+            throw new BusinessException(403, "对方尚未发起沟通，暂不能主动回复");
         }
         return counterpartUserId;
     }
@@ -295,7 +295,7 @@ public class ChatServiceImpl implements ChatService {
 
     private void ensurePublicChatAvailable(ItemContext context) {
         if (!isPublicChatStatus(context.status())) {
-            throw new BusinessException(403, "?????????????");
+            throw new BusinessException(403, "当前物品状态暂不支持在线沟通");
         }
     }
 
@@ -308,27 +308,27 @@ public class ChatServiceImpl implements ChatService {
         if ("LOST".equals(target.type())) {
             LostItem item = lostItemMapper.selectOneByQuery(QueryWrapper.create().where("id = ?", target.numericId()));
             if (item == null) {
-                throw new BusinessException(404, "???????");
+                throw new BusinessException(404, "物品不存在");
             }
             return new ItemContext(itemId, item.getTitle(), item.getUserId(), item.getStatus());
         }
 
         FoundItem item = foundItemMapper.selectOneByQuery(QueryWrapper.create().where("id = ?", target.numericId()));
         if (item == null) {
-            throw new BusinessException(404, "???????");
+            throw new BusinessException(404, "物品不存在");
         }
         return new ItemContext(itemId, item.getTitle(), item.getUserId(), item.getStatus());
     }
 
     private ReviewTarget parseTarget(String id) {
         if (id == null || !id.contains("-")) {
-            throw new BusinessException(400, "??????");
+            throw new BusinessException(400, "物品编号无效");
         }
         String[] parts = id.split("-", 2);
         try {
             return new ReviewTarget(parts[0].toUpperCase(), Long.parseLong(parts[1]));
         } catch (NumberFormatException ex) {
-            throw new BusinessException(400, "??????");
+            throw new BusinessException(400, "物品编号无效");
         }
     }
 
@@ -380,7 +380,7 @@ public class ChatServiceImpl implements ChatService {
     private User requireUser(Long userId) {
         User user = userMapper.selectOneByQuery(QueryWrapper.create().where("id = ?", userId));
         if (user == null) {
-            throw new BusinessException(404, "?????");
+            throw new BusinessException(404, "用户不存在");
         }
         return user;
     }

@@ -11,6 +11,8 @@ public interface ItemService {
 
     List<ItemDTO.ItemSummaryVO> search(String keyword, String location, String type, Long categoryId);
 
+    List<ItemDTO.ItemSummaryVO> keywordSearch(String keyword, String type, Long categoryId);
+
     List<ItemDTO.MyItemVO> myItems();
 
     ItemDTO.ItemActionVO updateItem(String itemId, ItemDTO.UpdateItemRequest request);

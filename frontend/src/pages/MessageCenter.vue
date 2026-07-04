@@ -263,7 +263,13 @@ import PublicLayout from '../components/PublicLayout.vue'
 import { getChatConversations, getChatSummary } from '../api/chat'
 import { emitUnreadChanged, toBackendAssetUrl } from '../api/client'
 import { getMessages, getMessageSummary, markAllMessagesRead, markMessageRead } from '../api/message'
-import { getItemChatMessages, getMyItems, searchItems, sendItemChatMessage } from '../api/item'
+import {
+  getItemChatContacts,
+  getItemChatMessages,
+  getMyItems,
+  searchItems,
+  sendItemChatMessage,
+} from '../api/item'
 import { normalizeItem } from '../utils/items'
 import { safeAlert } from '../utils/ui'
 
@@ -466,24 +472,117 @@ async function loadData() {
     chatSummary.totalCount = conversationSummary.totalCount || 0
     chatSummary.unreadCount = conversationSummary.unreadCount || 0
     pickInitialConversation()
+    await ensureQueryConversation()
   } catch (error) {
     safeAlert(error.message)
   }
 }
 
+function mapContactToConversation(contact, itemId) {
+  const itemTitle = itemMap.value[itemId]?.title || itemId
+  return {
+    itemId,
+    itemTitle,
+    counterpartUserId: contact.counterpartUserId,
+    counterpartName: contact.counterpartName,
+    counterpartLabel: contact.counterpartLabel,
+    counterpartAvatarUrl: contact.counterpartAvatarUrl,
+    lastMessage: contact.lastMessage || '',
+    lastTime: contact.lastTime || '',
+    unreadCount: contact.unreadCount || 0,
+  }
+}
+
+function upsertConversation(conversation) {
+  const key = conversationKey(conversation)
+  const index = chatConversations.value.findIndex((item) => conversationKey(item) === key)
+  if (index >= 0) {
+    chatConversations.value[index] = { ...chatConversations.value[index], ...conversation }
+  } else {
+    chatConversations.value = [...chatConversations.value, conversation]
+  }
+  currentConversationKey.value = key
+  ensureGroupExpanded(conversation.itemId)
+}
+
+async function ensureQueryConversation() {
+  const itemId = typeof route.query.itemId === 'string' ? route.query.itemId : ''
+  if (!itemId) return
+
+  const counterpartUserId = Number(route.query.counterpartUserId || 0) || null
+  const matched = chatConversations.value.find((item) =>
+    item.itemId === itemId && (!counterpartUserId || item.counterpartUserId === counterpartUserId)
+  )
+  if (matched) {
+    currentConversationKey.value = conversationKey(matched)
+    ensureGroupExpanded(itemId)
+    return
+  }
+
+  try {
+    const contacts = await getItemChatContacts(itemId)
+    if (!contacts.length) {
+      chatError.value = '当前还没有可沟通的联系人，请等待用户先发起咨询。'
+      return
+    }
+
+    if (counterpartUserId) {
+      const target = contacts.find((contact) => contact.counterpartUserId === counterpartUserId)
+      if (target) {
+        upsertConversation(mapContactToConversation(target, itemId))
+        chatError.value = ''
+        return
+      }
+    }
+
+    if (contacts.length === 1) {
+      upsertConversation(mapContactToConversation(contacts[0], itemId))
+      chatError.value = ''
+      return
+    }
+
+    contacts.forEach((contact) => {
+      const conversation = mapContactToConversation(contact, itemId)
+      const key = conversationKey(conversation)
+      const index = chatConversations.value.findIndex((item) => conversationKey(item) === key)
+      if (index >= 0) {
+        chatConversations.value[index] = { ...chatConversations.value[index], ...conversation }
+      } else {
+        chatConversations.value = [...chatConversations.value, conversation]
+      }
+    })
+    ensureGroupExpanded(itemId)
+    chatError.value = '请从左侧选择一个联系人。'
+  } catch (error) {
+    chatError.value = error.message || '无法加载沟通联系人'
+  }
+}
+
 function pickInitialConversation() {
+  const itemId = typeof route.query.itemId === 'string' ? route.query.itemId : ''
+  const counterpartUserId = Number(route.query.counterpartUserId || 0) || null
+
+  if (itemId) {
+    const queried = chatConversations.value.find((item) =>
+      item.itemId === itemId && (!counterpartUserId || item.counterpartUserId === counterpartUserId)
+    )
+    if (queried) {
+      currentConversationKey.value = conversationKey(queried)
+      ensureGroupExpanded(itemId)
+      return
+    }
+    currentConversationKey.value = ''
+    chatThread.value = null
+    return
+  }
+
   if (!chatConversations.value.length) {
     currentConversationKey.value = ''
     chatThread.value = null
     return
   }
-  const itemId = typeof route.query.itemId === 'string' ? route.query.itemId : ''
-  const counterpartUserId = Number(route.query.counterpartUserId || 0) || null
-  const queried = chatConversations.value.find((item) =>
-    item.itemId === itemId && (!counterpartUserId || item.counterpartUserId === counterpartUserId)
-  )
-  const target = queried
-    || chatConversations.value.find((item) => conversationKey(item) === currentConversationKey.value)
+
+  const target = chatConversations.value.find((item) => conversationKey(item) === currentConversationKey.value)
     || sortedConversations.value[0]
   currentConversationKey.value = target ? conversationKey(target) : ''
   if (target) ensureGroupExpanded(target.itemId)
@@ -621,11 +720,12 @@ watch(
 
 watch(
   () => route.query,
-  () => {
+  async () => {
     if (route.query.itemId) {
       activeTab.value = 'chats'
       pickInitialConversation()
-      loadCurrentThread()
+      await ensureQueryConversation()
+      await loadCurrentThread()
     }
   }
 )

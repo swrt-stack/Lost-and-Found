@@ -8,6 +8,8 @@ import java.util.List;
 public interface AdminService {
     AdminDTO.DashboardVO getDashboard();
 
+    AdminDTO.SpatiotemporalAnalysisVO getSpatiotemporalAnalysis(Integer topK);
+
     List<AdminDTO.ReviewVO> reviewList();
 
     List<AdminDTO.ReviewHistoryVO> reviewHistory();

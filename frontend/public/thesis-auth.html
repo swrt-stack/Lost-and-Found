@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>登录跳转</title>
+</head>
+<body>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search)
+  localStorage.setItem('token', params.get('token') || '')
+  localStorage.setItem('role', params.get('role') || '')
+  localStorage.setItem('username', params.get('username') || '')
+  var next = params.get('next') || '/admin-announcements'
+  window.location.replace(next)
+})()
+</script>
+</body>
+</html>

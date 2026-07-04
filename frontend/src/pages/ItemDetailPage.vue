@@ -37,24 +37,43 @@
             </div>
           </section>
 
-          <div v-if="pageMessage.text" class="inline-message" :class="pageMessage.type">
+          <section v-if="item.type === 'found'" class="claim-panel">
+            <h3 class="claim-panel__title">认领申请</h3>
+            <p class="claim-panel__hint">仅招领物品支持提交认领申请，发布人可在个人中心确认。</p>
+
+            <div v-if="!session.token" class="inline-message warning">
+              请先登录后再提交认领申请。
+              <RouterLink class="table-action" :to="loginPath">去登录</RouterLink>
+            </div>
+
+            <div v-else-if="currentClaim" class="inline-message info">
+              <div><strong>我的认领状态：</strong>{{ claimStatusLabel(currentClaim.status) }}</div>
+              <div><strong>申请时间：</strong>{{ currentClaim.createdAt }}</div>
+              <div><strong>申请留言：</strong>{{ currentClaim.message || '-' }}</div>
+              <div><strong>处理备注：</strong>{{ currentClaim.reviewRemark || '-' }}</div>
+              <RouterLink class="table-action" to="/user-center?tab=claims">查看我的认领申请</RouterLink>
+            </div>
+
+            <div v-else-if="showClaimForm" class="form-row" style="margin-top: 8px;">
+              <label>认领申请留言</label>
+              <input
+                v-model="claimMessage"
+                class="field"
+                placeholder="请输入认领说明或联系方式"
+              />
+            </div>
+
+            <div v-else-if="pageMessage.text" class="inline-message" :class="pageMessage.type">
+              {{ pageMessage.text }}
+            </div>
+          </section>
+
+          <div v-else class="inline-message info" style="margin-top: 14px;">
+            <strong>遗失物品：</strong>如需核实线索，请使用下方「联系发布人」与失主沟通。
+          </div>
+
+          <div v-if="pageMessage.text && item.type !== 'found'" class="inline-message" :class="pageMessage.type">
             {{ pageMessage.text }}
-          </div>
-
-          <div v-if="currentClaim" class="inline-message info">
-            <div><strong>我的认领状态：</strong>{{ claimStatusLabel(currentClaim.status) }}</div>
-            <div><strong>申请时间：</strong>{{ currentClaim.createdAt }}</div>
-            <div><strong>申请留言：</strong>{{ currentClaim.message || '-' }}</div>
-            <div><strong>处理备注：</strong>{{ currentClaim.reviewRemark || '-' }}</div>
-          </div>
-
-          <div v-if="showClaimForm" class="form-row" style="margin-top: 14px;">
-            <label>认领申请留言</label>
-            <input
-              v-model="claimMessage"
-              class="field"
-              placeholder="请输入认领说明或联系方式"
-            />
           </div>
 
           <div class="inline-message info" style="margin-top: 16px;">
@@ -64,7 +83,7 @@
 
           <div class="action-row" style="justify-content: flex-start;">
             <button
-              v-if="showClaimForm"
+              v-if="showClaimForm && session.token"
               class="primary-button"
               :disabled="submitting"
               @click="submitClaim"
@@ -122,7 +141,7 @@ import {
   claimFoundItem,
   getMyClaims,
   getMyItems,
-  searchItems,
+  keywordSearchItems,
 } from '../api/item'
 import { normalizeItem } from '../utils/items'
 
@@ -137,6 +156,10 @@ const pageMessage = ref({ type: '', text: '' })
 const myClaims = ref({ sentClaims: [], receivedClaims: [] })
 
 const session = computed(() => getAuthSession())
+const loginPath = computed(() => {
+  const redirect = encodeURIComponent(route.fullPath)
+  return `/login?redirect=${redirect}`
+})
 const isOwner = computed(() => itemOwnedByCurrentUser.value || (!!session.value.username && session.value.username === item.value.publisher))
 const currentClaim = computed(() =>
   myClaims.value.sentClaims?.find((entry) => entry.itemId === item.value.id) || null
@@ -204,7 +227,7 @@ async function loadItemDetail() {
     claimMessage.value = ''
     pageMessage.value = { type: '', text: '' }
     const [rows, claims] = await Promise.all([
-      searchItems({}),
+      keywordSearchItems({}),
       session.value.token ? getMyClaims() : Promise.resolve({ sentClaims: [], receivedClaims: [] }),
     ])
     myClaims.value = claims
@@ -324,6 +347,26 @@ watch(
 }
 
 .publisher-card__body span {
+  color: #607285;
+  font-size: 13px;
+}
+
+.claim-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 248, 238, 0.9);
+  border: 1px solid rgba(196, 141, 84, 0.2);
+}
+
+.claim-panel__title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #173854;
+}
+
+.claim-panel__hint {
+  margin: 0 0 12px;
   color: #607285;
   font-size: 13px;
 }

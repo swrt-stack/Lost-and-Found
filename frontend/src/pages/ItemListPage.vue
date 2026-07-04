@@ -3,16 +3,24 @@
     <section class="table-card">
       <h1 class="page-heading">全部物品信息列表</h1>
 
+      <div class="search-bar" style="margin-bottom: 18px;">
+        <input
+          v-model="filters.keyword"
+          class="field"
+          placeholder="请输入物品名称、描述、地点关键词"
+          @keyup.enter="() => loadItems()"
+        />
+        <button class="primary-button" type="button" @click="() => loadItems()">搜索</button>
+      </div>
+
       <div class="tab-row" style="margin-bottom: 18px;">
         <button class="chip" type="button" @click="setType('')">全部类型</button>
         <button class="chip" type="button" @click="setType('lost')">遗失物品</button>
         <button class="chip" type="button" @click="setType('found')">招领物品</button>
-        <select v-model="filters.categoryId" class="select-field" style="max-width: 180px;" @change="loadItems">
+        <select v-model="filters.categoryId" class="select-field" style="max-width: 180px;" @change="() => loadItems()">
           <option value="">分类筛选</option>
           <option v-for="item in categories" :key="item.id" :value="item.id">{{ item.name }}</option>
         </select>
-        <input v-model="filters.location" class="field" style="max-width: 180px;" placeholder="地点筛选" />
-        <button class="primary-button" type="button" @click="loadItems">搜索</button>
       </div>
 
       <table class="results-table">
@@ -57,8 +65,15 @@
             <td>{{ item.location }}</td>
             <td>{{ item.time }}</td>
             <td><span class="status-pill" :class="item.statusClass">{{ item.statusLabel }}</span></td>
-            <td>
+            <td class="claim-actions-cell">
               <RouterLink class="table-action" :to="{ path: '/item-detail', query: { id: item.id } }">查看详情</RouterLink>
+              <RouterLink
+                v-if="item.type === 'found' && item.status === 'APPROVED'"
+                class="table-action"
+                :to="{ path: '/item-detail', query: { id: item.id, claim: '1' } }"
+              >
+                申请认领
+              </RouterLink>
             </td>
           </tr>
         </tbody>
@@ -69,19 +84,21 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import PublicLayout from '../components/PublicLayout.vue'
 import { toBackendAssetUrl } from '../api/client'
 import { getCategories } from '../api/category'
-import { searchItems } from '../api/item'
+import { keywordSearchItems } from '../api/item'
 import { normalizeItem } from '../utils/items'
 import { safeAlert } from '../utils/ui'
 
+const route = useRoute()
 const categories = ref([])
 const items = ref([])
 const filters = reactive({
+  keyword: '',
   type: '',
   categoryId: '',
-  location: '',
 })
 
 function avatarText(value) {
@@ -96,10 +113,10 @@ function setType(type) {
 
 async function loadItems() {
   try {
-    const rows = await searchItems({
+    const rows = await keywordSearchItems({
+      keyword: filters.keyword.trim() || undefined,
       type: filters.type || undefined,
       categoryId: filters.categoryId || undefined,
-      location: filters.location || undefined,
     })
     items.value = rows.map(normalizeItem)
   } catch (error) {
@@ -109,6 +126,9 @@ async function loadItems() {
 
 onMounted(async () => {
   try {
+    if (typeof route.query.keyword === 'string' && !route.query.keyword.startsWith('[object ')) {
+      filters.keyword = route.query.keyword
+    }
     categories.value = await getCategories()
     await loadItems()
   } catch (error) {

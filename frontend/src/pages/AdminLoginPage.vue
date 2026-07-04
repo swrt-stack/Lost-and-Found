@@ -1,41 +1,41 @@
 <template>
   <div class="admin-login-page">
     <section class="admin-login-card">
-      <h1 class="page-heading">Admin Console Login</h1>
+      <h1 class="page-heading">管理后台登录</h1>
       <div class="form-grid">
         <div class="form-row">
-          <label>Username:</label>
-          <input v-model.trim="form.username" class="field" placeholder="Enter admin username" />
+          <label>用户名</label>
+          <input v-model.trim="form.username" class="field" placeholder="请输入管理员用户名" />
         </div>
         <div class="form-row">
-          <label>Password:</label>
-          <input v-model="form.password" class="field" type="password" placeholder="Enter password" />
+          <label>密码</label>
+          <input v-model="form.password" class="field" type="password" placeholder="请输入密码" />
         </div>
         <div class="form-row">
-          <label>Captcha:</label>
+          <label>验证码</label>
           <div class="captcha-row">
-            <input v-model.trim="form.captchaCode" class="field" style="max-width: 180px;" placeholder="Enter captcha" />
+            <input v-model.trim="form.captchaCode" class="field" style="max-width: 180px;" placeholder="请输入验证码" />
             <button type="button" class="captcha-box" :disabled="captchaLoading" @click="refreshCaptcha">
               <img
                 v-if="captcha.imageData"
                 :src="captcha.imageData"
-                alt="captcha"
+                alt="验证码"
                 style="height: 44px; width: 132px; object-fit: cover;"
               />
-              <span v-else>{{ captchaLoading ? 'Loading...' : 'Refresh' }}</span>
+              <span v-else>{{ captchaLoading ? '加载中…' : '点击刷新' }}</span>
             </button>
           </div>
         </div>
         <div class="form-row">
-          <label>Role:</label>
+          <label>登录身份</label>
           <div class="identity-select">
-            <label class="identity-option"><input v-model="form.role" type="radio" value="SYS_ADMIN" /> Super Admin</label>
-            <label class="identity-option"><input v-model="form.role" type="radio" value="REVIEW_ADMIN" /> Review Admin</label>
+            <label class="identity-option"><input v-model="form.role" type="radio" value="SYS_ADMIN" /> 超级管理员</label>
+            <label class="identity-option"><input v-model="form.role" type="radio" value="REVIEW_ADMIN" /> 审核管理员</label>
           </div>
         </div>
         <div class="action-row">
           <button class="primary-button" :disabled="submitting" @click="handleLogin">
-            {{ submitting ? 'Signing in...' : 'Sign in to admin' }}
+            {{ submitting ? '登录中…' : '登录管理后台' }}
           </button>
         </div>
       </div>
@@ -84,7 +84,7 @@ async function refreshCaptcha() {
 
 async function handleLogin() {
   if (!form.username || !form.password || !form.captchaId || !form.captchaCode) {
-    safeAlert('Please enter username, password, and captcha')
+    safeAlert('请填写用户名、密码和验证码')
     return
   }
   submitting.value = true
@@ -96,12 +96,12 @@ async function handleLogin() {
       captchaCode: form.captchaCode,
     })
     if (!['SYS_ADMIN', 'REVIEW_ADMIN'].includes(result.role)) {
-      safeAlert('This account does not have admin access')
+      safeAlert('该账号没有管理后台访问权限')
       await refreshCaptcha()
       return
     }
     if (result.role !== form.role) {
-      safeAlert('Selected role does not match this account')
+      safeAlert('所选身份与账号角色不一致')
       await refreshCaptcha()
       return
     }

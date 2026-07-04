@@ -175,6 +175,55 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public List<ItemDTO.ItemSummaryVO> keywordSearch(String keyword, String type, Long categoryId) {
+        String normalizedKeyword = normalize(keyword);
+        String normalizedType = normalize(type);
+        Map<Long, String> categories = categoryNameMap();
+        Map<Long, User> users = userMap();
+
+        List<ItemDTO.ItemSummaryVO> results = new ArrayList<>();
+        if (!"found".equalsIgnoreCase(normalizedType)) {
+            lostItemMapper.selectListByQuery(buildLostKeywordSearchQuery(normalizedKeyword, categoryId))
+                    .forEach(item -> results.add(new ItemDTO.ItemSummaryVO(
+                            "LOST-" + item.getId(),
+                            item.getTitle(),
+                            "lost",
+                            categories.getOrDefault(item.getCategoryId(), "Unknown"),
+                            item.getLocation(),
+                            formatTime(item.getLostTime()),
+                            displayName(users.get(item.getUserId())),
+                            avatarUrl(users.get(item.getUserId())),
+                            statusText(item.getStatus()),
+                            item.getDescription(),
+                            item.getContact(),
+                            null,
+                            item.getImages()
+                    )));
+        }
+        if (!"lost".equalsIgnoreCase(normalizedType)) {
+            foundItemMapper.selectListByQuery(buildFoundKeywordSearchQuery(normalizedKeyword, categoryId))
+                    .forEach(item -> results.add(new ItemDTO.ItemSummaryVO(
+                            "FOUND-" + item.getId(),
+                            item.getTitle(),
+                            "found",
+                            categories.getOrDefault(item.getCategoryId(), "Unknown"),
+                            item.getLocation(),
+                            formatTime(item.getFoundTime()),
+                            displayName(users.get(item.getUserId())),
+                            avatarUrl(users.get(item.getUserId())),
+                            statusText(item.getStatus()),
+                            item.getDescription(),
+                            null,
+                            item.getPickupMethod(),
+                            item.getImages()
+                    )));
+        }
+        return results.stream()
+                .sorted(Comparator.comparing(ItemDTO.ItemSummaryVO::time, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+    }
+
+    @Override
     public List<ItemDTO.MyItemVO> myItems() {
         User user = currentUserService.requireUser();
         Map<Long, String> categories = categoryNameMap();
@@ -576,6 +625,32 @@ public class ItemServiceImpl implements ItemService {
         }
         if (!location.isBlank()) {
             wrapper.and("location like ?", "%" + location + "%");
+        }
+        if (categoryId != null) {
+            wrapper.and("category_id = ?", categoryId);
+        }
+        return wrapper;
+    }
+
+    private QueryWrapper buildLostKeywordSearchQuery(String keyword, Long categoryId) {
+        QueryWrapper wrapper = QueryWrapper.create()
+                .where("status in (?, ?)", 1, 3);
+        if (!keyword.isBlank()) {
+            String pattern = "%" + keyword + "%";
+            wrapper.and("(title like ? or location like ? or description like ?)", pattern, pattern, pattern);
+        }
+        if (categoryId != null) {
+            wrapper.and("category_id = ?", categoryId);
+        }
+        return wrapper;
+    }
+
+    private QueryWrapper buildFoundKeywordSearchQuery(String keyword, Long categoryId) {
+        QueryWrapper wrapper = QueryWrapper.create()
+                .where("status in (?, ?)", 1, 3);
+        if (!keyword.isBlank()) {
+            String pattern = "%" + keyword + "%";
+            wrapper.and("(title like ? or location like ? or description like ?)", pattern, pattern, pattern);
         }
         if (categoryId != null) {
             wrapper.and("category_id = ?", categoryId);

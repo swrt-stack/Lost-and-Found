@@ -351,7 +351,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import PublicLayout from '../components/PublicLayout.vue'
 import { getCategories } from '../api/category'
 import { toBackendAssetUrl } from '../api/client'
@@ -365,6 +365,7 @@ import { roleLabel, safeAlert } from '../utils/ui'
 const PAGE_SIZE = 5
 
 const router = useRouter()
+const route = useRoute()
 
 const sections = [
   { key: 'profile', label: '个人资料修改' },
@@ -540,6 +541,9 @@ function resolveCategoryId(categoryName) {
 
 async function loadUserCenter() {
   try {
+    if (typeof route.query.tab === 'string' && sections.some((item) => item.key === route.query.tab)) {
+      activeTab.value = route.query.tab
+    }
     const [profileData, myItems, myClaims, myMessages, categoryRows] = await Promise.all([
       getProfile(),
       getMyItems(),

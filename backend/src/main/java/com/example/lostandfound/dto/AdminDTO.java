@@ -3,12 +3,28 @@ package com.example.lostandfound.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 public class AdminDTO {
 
     public record DashboardVO(Integer publishedCount, String retrievalRate, Map<String, Integer> categoryDistribution,
                               Map<String, Integer> statusDistribution, Map<String, Integer> typeDistribution) {
+    }
+
+    public record SpatiotemporalPredictionItemVO(Integer id, Double score, String label) {
+    }
+
+    public record SpatiotemporalAnalysisVO(
+            boolean serviceAvailable,
+            String serviceMessage,
+            boolean modelReady,
+            Integer historyLength,
+            Integer historySampleSize,
+            Map<String, Integer> locationHeatmap,
+            List<SpatiotemporalPredictionItemVO> nextLocations,
+            List<SpatiotemporalPredictionItemVO> nextTimeBuckets
+    ) {
     }
 
     public record ReviewVO(String id, String title, String type, String category, String publisher,

@@ -5,14 +5,18 @@
         <span class="hero-home__eyebrow">校园失物招领平台</span>
         <h1 class="hero-home__title">失物不滞留，寻物更快捷</h1>
         <p class="hero-home__subtitle">
-          用关键词、图片和智能推荐更快锁定线索，把遗失物品和招领信息集中到一个清晰入口。
+          输入物品名称、地点或描述关键词，快速检索已公开的遗失与招领信息。
         </p>
       </div>
 
       <div class="search-bar hero-home__search">
-        <input v-model="keyword" class="field" placeholder="请输入物品名称、描述、地点关键词" />
-        <button class="ghost-button" type="button" @click="goSearch">文字搜索</button>
-        <RouterLink class="primary-button nav-button" to="/search">以图寻物</RouterLink>
+        <input
+          v-model="keyword"
+          class="field"
+          placeholder="请输入物品名称、描述、地点关键词"
+          @keyup.enter="() => runSearch()"
+        />
+        <button class="primary-button" type="button" @click="() => runSearch()">搜索</button>
       </div>
 
       <div class="chip-row hero-home__chips">
@@ -22,7 +26,7 @@
           :key="item.id || item.name"
           class="chip"
           type="button"
-          @click="goSearch(item.name)"
+          @click="runSearch(item.name)"
         >
           {{ item.name }}
         </button>
@@ -138,7 +142,7 @@ import { useRouter } from 'vue-router'
 import PublicLayout from '../components/PublicLayout.vue'
 import { toBackendAssetUrl } from '../api/client'
 import { getCategories } from '../api/category'
-import { searchItems } from '../api/item'
+import { keywordSearchItems } from '../api/item'
 import { getAnnouncements } from '../api/system'
 import { normalizeItem } from '../utils/items'
 import { safeAlert } from '../utils/ui'
@@ -161,7 +165,7 @@ async function loadHomeData() {
   try {
     const [categoryRows, publicRows, announcementRows] = await Promise.all([
       getCategories(),
-      searchItems({}),
+      keywordSearchItems({}),
       getAnnouncements(),
     ])
     categories.value = categoryRows
@@ -172,8 +176,9 @@ async function loadHomeData() {
   }
 }
 
-function goSearch(term = keyword.value) {
-  router.push({ path: '/search', query: term ? { keyword: term } : {} })
+function runSearch(term) {
+  const value = (typeof term === 'string' ? term : keyword.value).trim()
+  router.push({ path: '/items', query: value ? { keyword: value } : {} })
 }
 
 onMounted(loadHomeData)

@@ -4,6 +4,10 @@ export function getDashboard() {
   return client.get('/admin/dashboard')
 }
 
+export function getSpatiotemporalAnalysis(topK = 5) {
+  return client.get('/admin/spatiotemporal/analysis', { params: { topK }, timeout: 60000 })
+}
+
 export function getAdminLostItems(keyword) {
   return client.get('/admin/lost-items', { params: { keyword } })
 }

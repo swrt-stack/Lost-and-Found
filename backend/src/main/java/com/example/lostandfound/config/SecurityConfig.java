@@ -50,7 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/auth/captcha").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/api/health/**", "/uploads/**", "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/items/search", "/api/system/dict", "/api/system/overview", "/api/system/announcements", "/api/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/items/search", "/api/items/keyword-search", "/api/system/dict", "/api/system/overview", "/api/system/announcements", "/api/categories").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/items/lost", "/api/items/found", "/api/upload/**").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/user/profile", "/api/messages", "/api/chats/**", "/api/items/mine", "/api/items/claims", "/api/items/*/chats/**").authenticated()
                         .requestMatchers("/api/ai/**").authenticated()
