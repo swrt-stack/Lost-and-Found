@@ -1,13 +1,12 @@
 # 校园失物招领系统
 
-> 基于图像检索与时空预测算法的校园失物招领平台 · 毕业设计项目
+> 基于图像检索与时空预测算法的校园失物招领平台
 
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-green?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/License-Academic-blue)](#)
 
 ---
 
@@ -238,18 +237,10 @@ pip install -r requirements.txt
 2. **JWT + BCrypt** 鉴权，支持服务端登出、强制下线与图形验证码
 3. **Redis** 用于缓存、限流、幂等控制与会话黑名单
 4. **双 AI 微服务** 独立部署，通过 HTTP 与主后端解耦
-5. **完整交付物**：数据库脚本、演示数据、运行文档、界面截图
-
----
-
-## 作者
-
-**盛中华** · 沈阳化工大学 · 2216020128
-
-指导教师：姜楠
+5. **开箱即用**：内置数据库脚本、演示数据、运行文档与界面截图
 
 ---
 
 ## License
 
-本项目为毕业设计作品，仅供学习与交流使用。
+本项目仅供学习与交流使用。
