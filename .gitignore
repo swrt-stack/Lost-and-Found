@@ -42,6 +42,14 @@ backend/uploads/*
 *.rdb
 dump.rdb
 
+# Local API debug snapshots
+/*-auth.json
+/login-*.json
+/upload*.json
+/user-*.json
+/captcha-*.json
+/tmp-idempotent-upload.jpg
+
 # Temp files
 tmp-chrome-items/
 tmp-*/
